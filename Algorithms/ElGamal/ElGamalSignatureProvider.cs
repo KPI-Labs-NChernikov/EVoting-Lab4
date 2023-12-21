@@ -31,7 +31,23 @@ public sealed class ElGamalSignatureProvider : ISignatureProvider<AsymmetricKeyP
 
         var s = m.Subtract(key.X.Multiply(r)).Multiply(k.ModInverse(pSubOne)).Mod(pSubOne);
 
-        return s.Equals(BigInteger.Zero) ? Sign(data, privateKey) : r.ToByteArrayUnsigned().FastConcat(s.ToByteArrayUnsigned());
+        return s.Equals(BigInteger.Zero) 
+            ? Sign(data, privateKey) 
+            : NormalizeSignaturePart(r.ToByteArrayUnsigned()).FastConcat(NormalizeSignaturePart(s.ToByteArrayUnsigned()));
+    }
+
+    private static byte[] NormalizeSignaturePart(byte[] array)
+    {
+        var expectedLength = (InternalConstants.ElGamalKeySize + 8 - 1) / 8;
+        if (expectedLength == array.Length)
+        {
+            return array;
+        }
+
+        byte[] result = new byte[expectedLength];
+        var difference = expectedLength - array.Length;
+        Buffer.BlockCopy(array, 0, result, difference, array.Length);
+        return result;
     }
 
     private static BigInteger GenerateK(BigInteger pSubOne)
@@ -39,7 +55,7 @@ public sealed class ElGamalSignatureProvider : ISignatureProvider<AsymmetricKeyP
         BigInteger k;
         do
         {
-            k = new BigInteger(InternalConstants.ElGamalKeySize - 1, 2, new SecureRandom()).Mod(pSubOne);
+            k = new BigInteger(InternalConstants.ElGamalKeySize, new SecureRandom()).Mod(pSubOne);
         } while (k.CompareTo(BigInteger.One) <= 0 
             || !k.Gcd(pSubOne).Equals(BigInteger.One));
 
