@@ -24,11 +24,6 @@ public sealed class ElGamalSignatureProvider : ISignatureProvider<AsymmetricKeyP
 
         var m = new BigInteger(1, hash, 0, hash.Length);
 
-        if (m.CompareTo(p) >= 1)
-        {
-            throw new ArgumentException("Data is too big", nameof(data));
-        }
-
         var s = m.Subtract(key.X.Multiply(r)).Multiply(k.ModInverse(pSubOne)).Mod(pSubOne);
 
         return s.Equals(BigInteger.Zero) 
