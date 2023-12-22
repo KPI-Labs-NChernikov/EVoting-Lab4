@@ -40,8 +40,8 @@ public sealed class ComplexEncryptionService : IComplexEncryptionProvider<Asymme
         aes.KeySize = PublicConstants.AesKeySize;
         aes.BlockSize = PublicConstants.AesBlockSize;
         var aesKeyAndIVSpan = decryptedAesKey.AsSpan();
-        aes.Key = aesKeyAndIVSpan.Slice(0, UtilityMethods.BitsToBytes(PublicConstants.AesKeySize)).ToArray();
-        aes.IV = aesKeyAndIVSpan.Slice(UtilityMethods.BitsToBytes(PublicConstants.AesKeySize)).ToArray();
+        aes.IV = aesKeyAndIVSpan.Slice(aesKeyAndIVSpan.Length - UtilityMethods.BitsToBytes(PublicConstants.AesBlockSize), UtilityMethods.BitsToBytes(PublicConstants.AesBlockSize)).ToArray();
+        aes.Key = aesKeyAndIVSpan.Slice(0, aesKeyAndIVSpan.Length - UtilityMethods.BitsToBytes(PublicConstants.AesBlockSize)).ToArray();
 
         using var decryptor = aes.CreateDecryptor();
         using var msPlain = new MemoryStream();

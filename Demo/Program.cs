@@ -28,3 +28,4 @@ var voters = dataFactory.CreateVoters(candidates);
 
 var printer = new ModellingPrinter();
 printer.PrintUsualVoting(voters, dataFactory.CreateVotersWithCandidateIds(voters));
+printer.PrintVotingWithExit(voters, dataFactory.CreateVotersWithCandidateIds(voters));

@@ -104,7 +104,7 @@ public sealed class Voter
             {
                 return Result.Try(() => _encryptionProvider.Decrypt(_transformer.ReverseTransform<ComplexEncryptedData>(b), _encryptionPrivateKey),
                     e => new Error("Message cannot be decrypted.").CausedBy(e));
-            });
+            }).ToList();
 
         var firstError = decryptedBallots.FirstOrDefault(r => r.IsFailed);
         if (firstError is not null)
@@ -180,7 +180,7 @@ public sealed class Voter
             {
                 return Result.Try(() => _encryptionProvider.Decrypt(_transformer.ReverseTransform<ComplexEncryptedData>(b), _encryptionPrivateKey),
                     e => new Error("Message cannot be decrypted.").CausedBy(e));
-            });
+            }).ToList();
 
         var firstError = decryptedBallots.FirstOrDefault(r => r.IsFailed);
         if (firstError is not null)
