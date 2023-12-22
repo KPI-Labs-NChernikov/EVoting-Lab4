@@ -14,4 +14,11 @@ public sealed class RandomProvider : IRandomProvider
     {
         return _random.Next(max);
     }
+
+    public IList<T> Shuffle<T>(IEnumerable<T> values)
+    {
+        var result = values.ToArray();
+        _random.Shuffle(result);
+        return result;
+    }
 }

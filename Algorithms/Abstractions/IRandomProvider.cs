@@ -11,4 +11,6 @@ public interface IRandomProvider
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxValue"/> is less than 0.</exception>
     int NextInt(int max);
+
+    IList<T> Shuffle<T>(IEnumerable<T> values);
 }
