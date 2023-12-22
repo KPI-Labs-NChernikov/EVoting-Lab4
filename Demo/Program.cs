@@ -2,6 +2,7 @@
 using Algorithms.Common;
 using Algorithms.ElGamal;
 using Algorithms.RSA;
+using Demo;
 using Modelling.CustomTransformers;
 using Modelling.Models;
 using System.Security.Cryptography;
@@ -11,51 +12,19 @@ var objectToByteArrayTransformer = new ObjectToByteArrayTransformer();
 objectToByteArrayTransformer.TypeTransformers.Add(new GuidTransformer());
 objectToByteArrayTransformer.TypeTransformers.Add(new ModellingTransformer());
 
-var rsaKeysGenerator = new RSAKeysGenerator();
-var keys = rsaKeysGenerator.Generate();
-var complexEncryptionService = new ComplexEncryptionService();
-var data = Encoding.UTF8.GetBytes("Hello world qe3i2sadioo3340923^^*%^");
-var encryptedData = complexEncryptionService.Encrypt(data, keys.PublicKey);
-var decryptedData = complexEncryptionService.Decrypt(encryptedData, keys.PrivateKey);
+var encryptionProvider = new ComplexEncryptionService();
+var encryptionKeyGenerator = new RSAKeysGenerator();
 
-var elGamalGenerator = new ElGamalKeysGenerator();
+var signatureProvider = new ElGamalSignatureProvider();
+var signatureKeyGenerator = new ElGamalKeysGenerator();
+
 using var rng = RandomNumberGenerator.Create();
-var signer = new ElGamalSignatureProvider();
-var elGamalKeys = elGamalGenerator.Generate();
-var elGamalData = encryptedData.EncryptedData; //new byte[] { 1, 2, 3, 4 };
-var signature = signer.Sign(elGamalData, elGamalKeys.PrivateKey);
-Console.WriteLine(signature.Length);
-var verified = signer.Verify(elGamalData, signature, elGamalKeys.PublicKey);
-Console.WriteLine(verified);
-var signedData = new SignedData<byte[]>(elGamalData, signature);
-var transformed = objectToByteArrayTransformer.Transform(signedData);
-var untransformed = objectToByteArrayTransformer.ReverseTransform<SignedData<byte[]>>(transformed);
-verified = signer.Verify(untransformed!.Data, untransformed.Signature, elGamalKeys.PublicKey);
-Console.WriteLine(verified);
+var paddingProvider = new PaddingProvider(rng);
+var randomProvider = new RandomProvider();
 
-var ballot = new Ballot(3);
-var transformedBallot = objectToByteArrayTransformer.Transform(ballot);
-var revTrBallot = objectToByteArrayTransformer.ReverseTransform<Ballot>(transformedBallot);
+var dataFactory = new DemoDataFactory(encryptionProvider, encryptionKeyGenerator, signatureProvider, signatureKeyGenerator, objectToByteArrayTransformer, paddingProvider, randomProvider);
+var candidates = dataFactory.CreateCandidates();
+var voters = dataFactory.CreateVoters(candidates);
 
-var transformedComplex = objectToByteArrayTransformer.Transform(encryptedData);
-var revTrComplex = objectToByteArrayTransformer.ReverseTransform<ComplexEncryptedData>(transformedComplex);
-var decryptedData2 = complexEncryptionService.Decrypt(encryptedData, keys.PrivateKey);
-Console.WriteLine(decryptedData2.AsSpan().SequenceEqual(decryptedData));
-
-Console.WriteLine();
-//var elGamalGenerator = new ElGamalKeysGenerator();
-//using var rng = RandomNumberGenerator.Create();
-//var signer = new ElGamalSignatureProvider();
-//for (var i = 0; i < 100; i++)
-//{
-//    var keys = elGamalGenerator.Generate();
-//    var data = Encoding.UTF8.GetBytes("Hello world qe3i2sadioo3340923^^*%^"); //new byte[] { 1, 2, 3, 4 };
-//    var signature = signer.Sign(data, keys.PrivateKey);
-//    Console.WriteLine(signature.Length);
-//    var verified = signer.Verify(data, signature, keys.PublicKey);
-//    if (!verified)
-//    {
-//        Console.ForegroundColor = ConsoleColor.Red;
-//    }
-//    Console.WriteLine(verified);
-//}
+var printer = new ModellingPrinter();
+printer.PrintUsualVoting(voters, dataFactory.CreateVotersWithCandidateIds(voters));

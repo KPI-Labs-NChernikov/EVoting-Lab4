@@ -39,7 +39,7 @@ public sealed class ModellingTransformer : IObjectToByteArrayTransformer
         }
         if (typeof(T) == typeof(ComplexEncryptedData))
         {
-            var keySize = UtilityMethods.BitsToBytes(PublicConstants.AesKeySize) + UtilityMethods.BitsToBytes(PublicConstants.AesBlockSize);
+            var keySize = UtilityMethods.BitsToBytes(PublicConstants.RsaKeySize);
             var key = span.Slice(0, keySize).ToArray();
             var encryptedData = span.Slice(keySize).ToArray();
             return (T)(object)new ComplexEncryptedData(key, encryptedData);

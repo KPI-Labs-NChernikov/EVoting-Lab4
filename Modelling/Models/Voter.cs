@@ -74,13 +74,17 @@ public sealed class Voter
         foreach (var voter in Voters.AsEnumerable().Reverse())
         {
             ballotAsByteArray = _transformer.Transform(_encryptionProvider.Encrypt(ballotAsByteArray, voter.EncryptionPublicKey));
+            _ballotsAsByteArrays.Push(ballotAsByteArray);
         }
 
         foreach (var voter in Voters.AsEnumerable().Reverse())
         {
             padding = _paddingProvider.GeneratePadding(PaddingConstants.PaddingSize);
             _randomStrings.Push(padding);
-            _ballotsAsByteArrays.Push(ballotAsByteArray);
+            if (voter != Voters.Last())
+            {
+                _ballotsAsByteArrays.Push(ballotAsByteArray);
+            }
             ballotAsByteArray = ballotAsByteArray.FastConcat(padding);
             ballotAsByteArray = _transformer.Transform(_encryptionProvider.Encrypt(ballotAsByteArray, voter.EncryptionPublicKey));
         }
@@ -118,13 +122,13 @@ public sealed class Voter
         }
 
         var ballotAsByteArrays = _ballotsAsByteArrays.Pop();
-        if (!myBallot.Value.AsSpan().Slice(myBallot.Value.Length - PaddingConstants.PaddingSize).SequenceEqual(ballotAsByteArrays))
+        if (!myBallot.Value.AsSpan().Slice(0, myBallot.Value.Length - PaddingConstants.PaddingSize).SequenceEqual(ballotAsByteArrays))
         {
             return Result.Fail(new Error($"The ballot of voter {FullName} was changed."));
         }
 
-        var decryptedBallotsWithputPadding = decryptedBallots
-            .Select(b => b.Value.AsSpan().Slice(myBallot.Value.Length - PaddingConstants.PaddingSize).ToArray())
+        var decryptedBallotsWithoutPadding = decryptedBallots
+            .Select(b => b.Value.AsSpan().Slice(0, b.Value.Length - PaddingConstants.PaddingSize).ToArray())
             .ToList();
 
         foreach (var voter in Voters)
@@ -138,7 +142,7 @@ public sealed class Voter
             voter.RemoveLastBallot();
         }
 
-        return Result.Ok((IReadOnlyList<byte[]>)_randomProvider.Shuffle(decryptedBallotsWithputPadding).ToList());
+        return Result.Ok((IReadOnlyList<byte[]>)_randomProvider.Shuffle(decryptedBallotsWithoutPadding).ToList());
     }
 
     private void RemoveLastRandomString()
@@ -184,16 +188,17 @@ public sealed class Voter
             return firstError.ToResult();
         }
 
-        var ballotAsByteArrays = _ballotsAsByteArrays.Pop();
         Result<byte[]>? myBallot = null;
         if (Voters.Last() == this)
         {
+            var ballotAsByteArrays = _ballotsAsByteArrays.Peek();
             myBallot = decryptedBallots
                 .FirstOrDefault(b => b.Value.AsSpan()
-                    .SequenceEqual(ballotAsByteArrays.FastConcat(_ballotsAsByteArrays.Peek())));
+                    .SequenceEqual(ballotAsByteArrays.FastConcat(_randomStrings.Peek())));
         }
         else
         {
+            var ballotAsByteArrays = _ballotsAsByteArrays.Pop();
             myBallot = decryptedBallots
                 .FirstOrDefault(b => b.Value.AsSpan()
                     .SequenceEqual(ballotAsByteArrays));
@@ -207,7 +212,7 @@ public sealed class Voter
 
         foreach (var voter in Voters)
         {
-            if (voter == this)
+            if (voter == this || Voters.Last() == this)
             {
                 continue;
             }
@@ -242,7 +247,7 @@ public sealed class Voter
         }
 
         var ballotAsByteArrays = _ballotsAsByteArrays.Pop();
-        if (!myBallot.AsSpan().Slice(myBallot.Length - PaddingConstants.PaddingSize).SequenceEqual(ballotAsByteArrays))
+        if (!myBallot.AsSpan().Slice(0, myBallot.Length - PaddingConstants.PaddingSize).SequenceEqual(ballotAsByteArrays))
         {
             return Result.Fail(new Error($"The ballot of voter {FullName} was changed."));
         }
@@ -254,7 +259,7 @@ public sealed class Voter
         }
         foreach (var ballot in ballots.Data)
         {
-            var ballotWithoutPadding = _transformer.ReverseTransform<Ballot>(ballot.AsSpan().Slice(myBallot.Length - PaddingConstants.PaddingSize).ToArray());
+            var ballotWithoutPadding = _transformer.ReverseTransform<Ballot>(ballot.AsSpan().Slice(0, myBallot.Length - PaddingConstants.PaddingSize).ToArray());
             if (ballotWithoutPadding is null )
             {
                 return Result.Fail("Cannot retrieve a ballot.");
