@@ -10,7 +10,9 @@ public sealed class ModellingTransformer : IObjectToByteArrayTransformer
     {
         return type == typeof(Ballot) 
             || type == typeof(SignedData<byte[]>) 
-            || type == typeof(byte[]);
+            || type == typeof(SignedData<ComplexEncryptedData>)
+            || type == typeof(byte[])
+            || type == typeof(ComplexEncryptedData);
     }
 
     private readonly GuidTransformer _guidTransformer = new ();
@@ -35,6 +37,13 @@ public sealed class ModellingTransformer : IObjectToByteArrayTransformer
         {
             return (T)(object)data;
         }
+        if (typeof(T) == typeof(ComplexEncryptedData))
+        {
+            var keySize = UtilityMethods.BitsToBytes(PublicConstants.AesKeySize) + UtilityMethods.BitsToBytes(PublicConstants.AesBlockSize);
+            var key = span.Slice(0, keySize).ToArray();
+            var encryptedData = span.Slice(keySize).ToArray();
+            return (T)(object)new ComplexEncryptedData(key, encryptedData);
+        }
 
         throw new NotSupportedException($"The type {typeof(T)} is not supported.");
     }
@@ -56,6 +65,11 @@ public sealed class ModellingTransformer : IObjectToByteArrayTransformer
         if (obj.GetType() == typeof(byte[]))
         {
             return (byte[])obj;
+        }
+        if (obj.GetType() == typeof(ComplexEncryptedData))
+        {
+            var complexEncryptedData = (ComplexEncryptedData)obj;
+            return complexEncryptedData.EncryptedKey.FastConcat(complexEncryptedData.EncryptedData);
         }
 
         throw new NotSupportedException($"The type {obj.GetType()} is not supported.");

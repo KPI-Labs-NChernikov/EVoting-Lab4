@@ -7,4 +7,6 @@ public static class PublicConstants
     public const int IntSize = sizeof(int);
     public const int GuidSize = 16;
     public static readonly Encoding Encoding = Encoding.UTF8;
+    public const int AesKeySize = 256;
+    public const int AesBlockSize = 128;
 }

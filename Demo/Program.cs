@@ -37,6 +37,11 @@ var ballot = new Ballot(3);
 var transformedBallot = objectToByteArrayTransformer.Transform(ballot);
 var revTrBallot = objectToByteArrayTransformer.ReverseTransform<Ballot>(transformedBallot);
 
+var transformedComplex = objectToByteArrayTransformer.Transform(encryptedData);
+var revTrComplex = objectToByteArrayTransformer.ReverseTransform<ComplexEncryptedData>(transformedComplex);
+var decryptedData2 = complexEncryptionService.Decrypt(encryptedData, keys.PrivateKey);
+Console.WriteLine(decryptedData2.AsSpan().SequenceEqual(decryptedData));
+
 Console.WriteLine();
 //var elGamalGenerator = new ElGamalKeysGenerator();
 //using var rng = RandomNumberGenerator.Create();

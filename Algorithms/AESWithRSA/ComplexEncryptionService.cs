@@ -10,8 +10,8 @@ public sealed class ComplexEncryptionService : IComplexEncryptionProvider<Asymme
     public ComplexEncryptedData Encrypt(byte[] data, AsymmetricKeyParameter publicKey)
     {
         using var aes = Aes.Create();
-        aes.KeySize = InternalConstants.AesKeySize;
-        aes.BlockSize = InternalConstants.AesBlockSize;
+        aes.KeySize = PublicConstants.AesKeySize;
+        aes.BlockSize = PublicConstants.AesBlockSize;
         aes.GenerateKey();
         aes.GenerateIV();
 
@@ -37,11 +37,11 @@ public sealed class ComplexEncryptionService : IComplexEncryptionProvider<Asymme
         var decryptedAesKey = engine.ProcessBlock(data.EncryptedKey, 0, data.EncryptedKey.Length);
 
         using var aes = Aes.Create();
-        aes.KeySize = InternalConstants.AesKeySize;
-        aes.BlockSize = InternalConstants.AesBlockSize;
+        aes.KeySize = PublicConstants.AesKeySize;
+        aes.BlockSize = PublicConstants.AesBlockSize;
         var aesKeyAndIVSpan = decryptedAesKey.AsSpan();
-        aes.Key = aesKeyAndIVSpan.Slice(0, UtilityMethods.BitsToBytes(InternalConstants.AesKeySize)).ToArray();
-        aes.IV = aesKeyAndIVSpan.Slice(UtilityMethods.BitsToBytes(InternalConstants.AesKeySize), UtilityMethods.BitsToBytes(InternalConstants.AesBlockSize)).ToArray();
+        aes.Key = aesKeyAndIVSpan.Slice(0, UtilityMethods.BitsToBytes(PublicConstants.AesKeySize)).ToArray();
+        aes.IV = aesKeyAndIVSpan.Slice(UtilityMethods.BitsToBytes(PublicConstants.AesKeySize), UtilityMethods.BitsToBytes(PublicConstants.AesBlockSize)).ToArray();
 
         using var decryptor = aes.CreateDecryptor();
         using var msPlain = new MemoryStream();
