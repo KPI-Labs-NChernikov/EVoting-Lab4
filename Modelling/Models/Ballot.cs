@@ -1,5 +1,5 @@
 ﻿namespace Modelling.Models;
-public sealed class Ballot
+public sealed class Ballot : IEquatable<Ballot>
 {
     public int CandidateId { get; }
 
