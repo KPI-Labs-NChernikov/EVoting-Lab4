@@ -31,7 +31,7 @@ public sealed class VotingResults : IEquatable<VotingResults>
             }
         }
 
-        foreach (var (ballot, otherBallot) in Ballots.Zip(other.Ballots))
+        foreach (var (ballot, otherBallot) in Ballots.OrderBy(b => b.CandidateId).Zip(other.Ballots.OrderBy(b => b.CandidateId)))
         {
             if (ballot != otherBallot)
             {
@@ -67,7 +67,7 @@ public sealed class VotingResults : IEquatable<VotingResults>
             builder.Add(candidateResult);
         }
 
-        foreach (var ballot in Ballots)
+        foreach (var ballot in Ballots.OrderBy(b => b.CandidateId))
         {
             builder.Add(ballot);
         }
