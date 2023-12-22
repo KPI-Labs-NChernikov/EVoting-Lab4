@@ -33,6 +33,9 @@ var untransformed = objectToByteArrayTransformer.ReverseTransform<SignedData<byt
 verified = signer.Verify(untransformed!.Data, untransformed.Signature, elGamalKeys.PublicKey);
 Console.WriteLine(verified);
 
+var ballot = new Ballot(3);
+var transformedBallot = objectToByteArrayTransformer.Transform(ballot);
+var revTrBallot = objectToByteArrayTransformer.ReverseTransform<Ballot>(transformedBallot);
 
 Console.WriteLine();
 //var elGamalGenerator = new ElGamalKeysGenerator();
